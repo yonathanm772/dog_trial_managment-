@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scores</title>
+    <script src="script.js" defer></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <div class="title">
+            <h1>Dog Trial Management System</h1>
+        </div>
+        </header>
+    <main>
+
+        <!-- Section: Display Participants -->
+        <div class="section">
+            <h2>Participants</h2>
+            <label for="participant-select">Select Participant:</label>
+            <select id="participants-select">
+                <option value="">Select a Participant</option>
+            </select>
+            <div id="participant-details"></div>
+        </div>
+
+        <!-- Section: Enter Scores -->
+        <div class="section">
+            <h2>Enter Scores</h2>
+            <label for="classes-selected">Select Class:</label>
+            <select id="classes-selected">
+                <option value="">Select a Classes</option>
+            </select>
+
+            <label for="score">Score:</label>
+            <input type="number" id="score" placeholder="Enter score">
+
+            <label for="time">Time (seconds):</label>
+            <input type="number" id="time" placeholder="Enter time">
+
+           
+            <button onclick="saveScore()">Save Results</button>
+        </div>
+    </main>
+</body>
+</html>
+the enter scores section and calculate results section should be in a different html pages.
+The enter scores section should prompt the user to select someone from saved participants, and it should have the same 
