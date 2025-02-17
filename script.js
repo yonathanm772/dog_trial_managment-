@@ -77,19 +77,27 @@ function addClassToSelected(className) {
 
 // Function to remove a class from the "Selected Classes" section
 function removeClassFromSelected(className) {
-    selectedClasses = selectedClasses.filter(cls => cls !== className);
+    selectedClasses = selectedClasses.filter(cls => cls.trim() !== className.trim());
+    console.log("Updated classes:", selectedClasses); // Debugging output
     renderSelectedClasses();
 }
 
 // Function to render the selected classes
 function renderSelectedClasses() {
     const classesSelectedDiv = document.getElementById('classes-selected');
-    classesSelectedDiv.innerHTML = selectedClasses.map(cls => `
-        <div class="card">
-            <span>${cls}</span>
-            <button onclick="removeClassFromSelected('${cls}')">-</button>
-        </div>
-    `).join('');
+
+    // Clear previous content
+    classesSelectedDiv.innerHTML = "";
+
+    selectedClasses.forEach(cls => {
+        const div = document.createElement('div');
+        div.classList.add('card');
+        div.innerHTML = `
+            <span>${cls}</span> 
+            <button class="remove-class-btn" data-class="${cls}">-</button>
+        `;
+        classesSelectedDiv.appendChild(div);
+    });
 }
 
 // Save Participant
@@ -132,8 +140,8 @@ async function saveParticipant() {
 
 // Save Score
 async function saveScore() {
-    const classId = document.getElementById('class-select').value;
-    const participantId = document.getElementById('participant-select').value;
+    const classId = document.getElementById('classes-selected').value;
+    const participantId = document.getElementById('participants-select').value;
     const score = document.getElementById('score').value;
     const time = document.getElementById('time').value;
 
@@ -181,21 +189,18 @@ async function calculateResults() {
 // Load and display participants
 async function loadParticipants() {
     try {
-        const response = await fetch('/api/participants');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
         const participants = await fetchData('/api/participants');
+
+        
         console.log("🎯 Loaded Participants:", participants); // Debugging output
 
         const participantsList = document.getElementById('participants-list');
         const participantsSelect = document.getElementById('participants-select');
 
         if (participantsList) {
-            if(participantsList.innerHTML = participants.length > 0)
+            if(participants.length > 0)
             {
-                participants.map(participant => `
+                participantsList.innerHTML = participants.map(participant => `
                     <div class="card">
                         <h3>${participant.callName}</h3>
                         <p>Trial: ${participant.trialName} (${participant.trialDate})</p>
@@ -206,7 +211,7 @@ async function loadParticipants() {
                 `).join('')
             }
             else   
-                '<div class="card">No participants found.</div>';
+            participantsList.innerHTML = '<div class="card">No participants found.</div>';
         }
 
         if (participantsSelect) {
@@ -232,12 +237,7 @@ async function fetchSelectedParticipant() {
     if (!participantId) return;
 
     try {
-        const response = await fetch(`/api/participants/${participantId}`);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const participant = await response.json();
+        const participant = await fetchData(`/api/participants/${participantId}`);
 
         if (!participant) {
             console.error('❌ Participant not found.');
@@ -249,20 +249,23 @@ async function fetchSelectedParticipant() {
         // Populate Selected Classes Section
         const classesSelectedDiv = document.getElementById('classes-selected');
         if (classesSelectedDiv) {
-            classesSelectedDiv.innerHTML = participant.selectedClasses.length > 0
-                ? participant.selectedClasses.map(cls => `
-                    <div class="card">
-                        <span>${cls}</span>
-                    </div>
-                `).join('')
-                : '<p>No classes selected.</p>';
+            classesSelectedDiv.innerHTML = ""; // Clear previous entries
+            if(participant.selectedClasses.length > 0) {
+                participant.selectedClasses.forEach(cls=> {
+                    const option = document.createElement('option');
+                    option.value = participant._id;  // Use MongoDB's ObjectId
+                    option.textContent = cls;
+                    classesSelectedDiv.appendChild(option);
+                    //classesSelectedDiv.innerHTML = '<option value="">Select a Participant</option>';
+                });
+            }
+            else
+                classesSelectedDiv.innerHTML = '<p>No classes selected.</p>';
         }
     } catch (error) {
         console.error('❌ Error fetching participant:', error);
     }
 }
-
-
 
 // Load data when the page loads
 window.onload = () => {
@@ -275,4 +278,13 @@ window.onload = () => {
     if (document.getElementById('participants-select')) {
         loadParticipants();
     }
+
+    document.getElementById('classes-selected').addEventListener('click', function(event) {
+        if (event.target.classList.contains('remove-class-btn')) {
+            const className = event.target.getAttribute('data-class');
+            removeClassFromSelected(className);
+        }
+    });
+        //everything works for now, try to implrement save result
+        // handle missing fields and prompt user their error
 };
