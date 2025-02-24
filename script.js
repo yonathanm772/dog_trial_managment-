@@ -140,13 +140,15 @@ async function saveParticipant() {
 
 // Save Score
 async function saveScore() {
-    const classId = document.getElementById('classes-selected').value;
+    const classId = document.getElementById('classes-selected').value; // Ensure this is the correct ID
     const participantId = document.getElementById('participants-select').value;
     const score = document.getElementById('score').value;
     const time = document.getElementById('time').value;
 
     const data = { classId, score, time };
-    const result = await fetchData(`/api/participants/${participantId}/scores`, 'POST', data);
+
+    // Send the single score object to the backend
+    const result = await fetchData(`/api/participants/${participantId}/scores`, 'PUT', data);
     alert(result.message);
     loadParticipants(); // Refresh the participants list
 }
@@ -267,6 +269,15 @@ async function fetchSelectedParticipant() {
     }
 }
 
+async function removeClasses() {
+    document.getElementById('classes-selected').addEventListener('click', function(event) {
+        if (event.target.classList.contains('remove-class-btn')) {
+            const className = event.target.getAttribute('data-class');
+            removeClassFromSelected(className);
+        }
+    });
+}
+
 // Load data when the page loads
 window.onload = () => {
     if (document.getElementById('participant-classes')) {
@@ -278,13 +289,10 @@ window.onload = () => {
     if (document.getElementById('participants-select')) {
         loadParticipants();
     }
-
-    document.getElementById('classes-selected').addEventListener('click', function(event) {
-        if (event.target.classList.contains('remove-class-btn')) {
-            const className = event.target.getAttribute('data-class');
-            removeClassFromSelected(className);
-        }
-    });
-        //everything works for now, try to implrement save result
+    if (document.getElementById('classes-selected')) {
+        removeClasses();
+    }
+    
         // handle missing fields and prompt user their error
+        // whenever the function saveScores is executed, the scores variable dissappears.
 };

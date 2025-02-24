@@ -28,13 +28,16 @@ const ParticipantSchema = new mongoose.Schema({
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
     selectedClasses: { type: [String], default: [] },
-    scores: [
-        {
-            classId: { type: String, required: true },
-            score: { type: Number, required: true },
-            time: { type: Number, required: true }
-        }
-    ],
+    scores: {
+       type: [
+            {
+                classId: { type: String, required: true },
+                score: { type: Number, required: true },
+                time: { type: Number, required: true }
+            }
+        ],
+    default: [],
+    },
 });
 
 // Define Model
@@ -113,21 +116,28 @@ app.get('/api/participants/:id', async (req, res) => {
 app.put('/api/participants/:id/scores', async (req, res) => {
     try {
         const { id } = req.params;
-        const { scores } = req.body;
+        const { classId, score, time } = req.body; // Destructure the single score object
 
+        // Validate participant ID
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({ message: '❌ Invalid participant ID format' });
         }
 
+        // Find the participant
         const participant = await Participant.findById(id);
         if (!participant) {
             return res.status(404).json({ message: '❌ Participant not found' });
         }
+        
+        // Append the new score to the existing scores
+        participant.scores.push({ classId, score, time });
+       // participant.scores = participant.scores.concat(scores);
 
-        participant.scores = scores;
+        // Save the updated participant
         await participant.save();
 
-        res.json({ message: '✅ Scores updated successfully!', participant });
+        // Respond with success message and updated participant
+        res.json({ message: '✅ Score added successfully!', participant });
 
     } catch (error) {
         console.error('❌ Error updating scores:', error);
