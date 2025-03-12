@@ -68,8 +68,10 @@ function addClassToSelected(className) {
         alert('You can only select up to 5 classes.');
         return;
     }
-
     if (!selectedClasses.includes(className)) {
+        /*const selectedClassElement = document.getElementById("classes-selected");
+        const selectedClassId = selectedClassElement.value; // Ensure it saves the ID
+        selectedClasses.push(selectedClassId); // Push ID, not name*/
         selectedClasses.push(className);
         renderSelectedClasses();
     }
@@ -109,7 +111,6 @@ async function saveParticipant() {
     const ratterId = document.getElementById('ratter-id').value;
     const firstName = document.getElementById('first-name').value;
     const lastName = document.getElementById('last-name').value;
-
     const data = {
         trialName,
         trialDate,
@@ -140,7 +141,18 @@ async function saveParticipant() {
 
 // Save Score
 async function saveScore() {
-    const classId = document.getElementById('classes-selected').value; // Ensure this is the correct ID
+    /*let classId = '';
+    console.log(classId);
+    const classesSelected = document.getElementById('classes-selected');
+    classesSelected.addEventListener('onclick', (event) => {
+        classId = event.target.value;
+        if (classId) {
+            console.log(classId);
+        }
+    });*/
+
+    const selectedElement = document.getElementById('classes-selected');
+    const classId = selectedElement.options[selectedElement.selectedIndex].text; // This gives the name
     const participantId = document.getElementById('participants-select').value;
     const score = document.getElementById('score').value;
     const time = document.getElementById('time').value;
@@ -153,22 +165,47 @@ async function saveScore() {
     loadParticipants(); // Refresh the participants list
 }
 
+
+function placements(Scores){
+    let first, second, third = '';
+}
 // Calculate Results
 async function calculateResults() {
     const classId = document.getElementById('class-select-results').value;
     const participants = await fetchData('/api/participants');
 
-    // Filter participants who have scores for the selected class
-    const results = participants
-        .filter(participant => participant.scores.some(score => score.classId === classId))
-        .map(participant => {
-            const score = participant.scores.find(score => score.classId === classId);
-            return {
-                callName: participant.callName,
-                score: score.score,
-                time: score.time,
-            };
+    const results = participants.filter(participant => {
+        console.log(`Checking Participant: ${participant.callName}`);
+        
+        if (!participant.scores || !Array.isArray(participant.scores)) {
+            console.log(`❌ No scores found for ${participant.callName}`);
+            return false;
+        }
+    
+        return participant.scores.some(score => {
+            console.log(`Comparing: score.classId (${score.classId}) === classId (${classId})`);
+            console.log(`Data Types: ${typeof score.classId} vs ${typeof classId}`);
+    
+            return String(score.classId).trim() === String(classId).trim();
         });
+    })
+    .map(participant => {
+        const score = participant.scores.find(score => String(score.classId).trim() === String(classId).trim());
+    
+        if (!score) {
+            console.warn(`⚠️ No matching score found for classId: ${classId} in participant: ${participant.callName}`);
+            return null; // Return null so that it can be filtered out later
+        }
+    
+        console.log("✅ Matching Score Found:", score);
+    
+        return {
+            callName: participant.callName,
+            score: score.score,
+            time: score.time,
+        };
+    }).filter(result => result !== null); // Remove null values
+    console.log("Final Results:", results);
 
     // Display results in a table
     const resultsTable = document.getElementById('results-table');
@@ -255,10 +292,9 @@ async function fetchSelectedParticipant() {
             if(participant.selectedClasses.length > 0) {
                 participant.selectedClasses.forEach(cls=> {
                     const option = document.createElement('option');
-                    option.value = participant._id;  // Use MongoDB's ObjectId
+                    option.value = participant._id;  // Uses MongoDB's ObjectId
                     option.textContent = cls;
                     classesSelectedDiv.appendChild(option);
-                    //classesSelectedDiv.innerHTML = '<option value="">Select a Participant</option>';
                 });
             }
             else
@@ -292,7 +328,10 @@ window.onload = () => {
     if (document.getElementById('classes-selected')) {
         removeClasses();
     }
-    
-        // handle missing fields and prompt user their error
-        // whenever the function saveScores is executed, the scores variable dissappears.
+        // trying to make ids match for score saving and calculation( try to create your own function or just use class names)
+        //when savin the scores for one class, either delete the class from UI, or tell the user the class has already been filled out
+        // for calculate scores class selection, use similar format to selecting a class at the beginning 
+        /** ERRORS TO HANDLE
+         * not selecting the date
+         */
 };
