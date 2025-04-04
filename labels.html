@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Labels</title>
+        <script src="script.js" defer></script>
+        <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <div class="title">
+            <h1>Dog Trial Management System</h1>
+        </div>
+    </header>
+    <main>
+    
+        <!-- Section: Select class-->
+        <div class="section">
+            <h2>Ribbon Labels</h2>
+            <label for="trial-date">Trial Date:</label>
+            <input type="date" id="trial-date">  
+            <div id="labels-container"></div>
+            <button class="no-print" onclick="generateLabels()">Generate Labels</button>
+            <button class="no-print" onclick="window.print()">Print Labels</button>
+        <!--
+            <button class="no-print" onclick="generateLabels()">Print Labels</button>
+ 
+            
+        -->
+           
+    </main>
+</body>
+
+</html>

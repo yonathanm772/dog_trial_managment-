@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scores</title>
+    <script src="script.js" defer></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <div class="title">
+            <h1>Dog Trial Management System</h1>
+        </div>
+    </header>
+    <main>
+
+        <!-- Section: Select class-->
+        <div class="section">
+            <h2>Calculate Placements</h2>
+            <label for="trial-date">Trial Date:</label>
+            <input type="date" id="trial-date"> 
+            <label for="class-select-results">Select Class:</label>
+            <select id="class-select-results"></select>
+            <button onclick="calculateResults()">Calculate Placements</button>
+        
+           <!-- Results Table -->
+           <table id="results-table">
+                <tr>
+                    <th>Call Name</th>
+                    <th>Score</th>
+                    <th>Time (seconds)</th>
+                </tr>
+            </table>
+            </div>
+    </main>
+</body>
+</html>

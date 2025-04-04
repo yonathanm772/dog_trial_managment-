@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <script src="script.js" defer></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <div class="title">
+            <h1>Ratter Trials Pro</h1>
+        </div>
+    </header>
+    <main>
+        <!-- Section: Trial Setup -->
+        <div class="section">
+            <h2>Setup Trial</h2>
+            <label for="trial-name">Trial Name:</label>
+            <input type="text" id="trial-name" placeholder="Enter trial name">
+
+            <label for="trial-date">Trial Date:</label>
+            <input type="date" id="trial-date">        
+        </div>
+
+        <!-- Section: Participant Registration -->
+        <div class="section">
+            <h2>Register Participants</h2>
+            <label for="call-name">Call Name:</label>
+            <input type="text" id="call-name" placeholder="Enter call name">
+
+            <label for="dog-breed">Dog Breed:</label>
+            <input type="text" id="dog-breed" placeholder="Enter dog breed">
+
+            <label for="ratter-id">Ratter ID:</label>
+            <input type="text" id="ratter-id" placeholder="Enter Ratter ID">
+
+            <label for="first-name">First Name:</label>
+            <input type="text" id="first-name" placeholder="Enter first name">
+
+            <label for="last-name">Last Name:</label>
+            <input type="text" id="last-name" placeholder="Enter last name">
+
+            <label for="email">Gmail:</label>
+            <input type="text" id="gmail" placeholder="Enter email">
+
+            <label for="participant-classes">Classes:</label>
+            <select id="participant-classes" multiple></select>
+
+            <!-- Selected Classes Section -->
+            <div id="classes-selected" class="grid"></div>
+            <button onclick="saveParticipant()">Save Participant</button>
+        </div>
+
+        <!-- Section: Display Participants -->
+        <div class="section">
+            <h2>Participants</h2>
+            <div id="participants-list" class="grid"></div>
+        </div>
+
+        <!-- Section: Enter Scores -->
+        <div class="section">
+            <h2>Enter Scores</h2>
+            <button onclick="location.href='scores.html'">Enter Scores</button>
+        </div>
+
+        <!-- Section: Calculate Results -->
+        <div class="section">
+            <h2>Calculate Results</h2>
+            <button onclick="location.href='placements.html'">Calculate Results</button>
+        </div>
+
+        <!-- Section: Print Labels -->
+        <div class="section">
+            <h2>Labels</h2>
+            <button onclick="location.href='Labels.html'">Print Labels</button>
+        </div>
+
+        <!-- Section: Email -->
+        <div class="section">
+            <h2>Email</h2>
+            <button onclick="location.href='email.html'">Send Emails</button>
+        </div>
+    </main>
+</body>
+</html>
