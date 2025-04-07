@@ -414,6 +414,42 @@ async function sendConfirmationEmails() {
     }
 }
 
+async function sendResultsEmails() {
+    const dateInput = document.getElementById("trial-date").value;
+
+    if (!dateInput) {
+        alert("❌ No date selected!");
+        return;
+    }
+
+    console.log(`📧 Sending results emails for participants on: ${dateInput}`);
+
+    try {
+        let response = await fetch(`http://localhost:5500/api/send-results-email?date=${dateInput}`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+
+        let result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || "Failed to send results emails");
+        }
+
+        console.log("✅ Results emails sent successfully!");
+        alert("✅ Results emails sent successfully!");
+
+        // Optionally, refresh the participant list or perform other actions
+        fetchEmailsByDate();
+
+    } catch (error) {
+        console.error("❌ Error sending results emails:", error);
+        alert("❌ Error sending results emails. Check console for details.");
+    }
+}
+
 /*async function fetchEmailsByDate() {
     const selectedDate = document.getElementById('trial-date').value;
     const emailContainer = document.getElementById('email-list');

@@ -139,3 +139,42 @@ button:hover {
     border-top: 2px dotted black;
     margin-top: 10px;
 }
+
+/* Cards Container */
+.cards-container {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+/* Card Styles */
+.card {
+    flex: 1;
+    margin: 0 10px;
+    padding: 20px;
+    text-align: center;
+    border-radius: 8px;
+    color: white;
+    font-weight: bold;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+}
+
+/* Specific Card Colors */
+.blue-card {
+    background-color: #007bff;
+}
+
+.green-card {
+    background-color: #28a745;
+}
+
+.red-card {
+    background-color: #dc3545;
+}

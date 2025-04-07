@@ -372,6 +372,123 @@ app.post("/api/send-confirmation-email", async (req, res) => {
 });
 
 
+/*app.post("/api/send-results-email", async (req, res) => {
+    try {
+        const { date } = req.query;
+        if (!date) {
+            return res.status(400).json({ message: "❌ Date query parameter is required." });
+        }
+
+        // Fetch participants for the given date
+        const participants = await Participant.find({ trialDate: date });
+
+        if (!participants.length) {
+            return res.status(404).json({ message: "❌ No participants found for the given date." });
+        }
+
+        // Setup Gmail transporter (replace with real credentials)
+        const transporter = nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+                user: "yonathanm772@gmail.com",
+                pass: "rrqv ypnp nppy qpdl", // Use an App Password instead of real password
+            },
+        });
+
+        // Send results emails to each participant
+        for (const participant of participants) {
+            if (participant.scores.length === 0) {
+                console.warn(`⚠️ No scores available for participant: ${participant.callName}`);
+                continue;
+            }
+
+            // Format the email body
+            const emailBody = participant.scores.map(score => `
+                ${participant.trialDate}    ${score.classId}    ${participant.callName}     ${participant.dogBreed}     ${participant.ratterId}     ${participant.firstName}    ${participant.lastName}     ${participant.gmail}    ${score.score}  ${score.time}   ${score.placement || ""}
+            `).join("\n");
+
+            // Send the email
+            await transporter.sendMail({
+                from: "yonathanm772@gmail.com",
+                to: participant.gmail,
+                subject: "Happy Ratter Trial Results",
+                text: emailBody,
+            });
+
+            console.log(`✅ Results email sent to: ${participant.gmail}`);
+        }
+
+        res.json({ message: "✅ Results emails sent successfully!" });
+
+    } catch (error) {
+        console.error("❌ Error sending results emails:", error);
+        res.status(500).json({ message: "Internal Server Error", error: error.message });
+    }
+});*/
+
+app.post("/api/send-results-email", async (req, res) => {
+    try {
+        const { date } = req.query;
+        if (!date) {
+            return res.status(400).json({ message: "❌ Date query parameter is required." });
+        }
+
+        // Fetch participants for the given date
+        const participants = await Participant.find({ trialDate: date });
+
+        if (!participants.length) {
+            return res.status(404).json({ message: "❌ No participants found for the given date." });
+        }
+
+        // Setup Gmail transporter (replace with real credentials)
+        const transporter = nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+                user: "yonathanm772@gmail.com",
+                pass: "rrqv ypnp nppy qpdl", // Use an App Password instead of real password
+            },
+        });
+
+        // Group results by Gmail
+        const resultsByGmail = participants.reduce((acc, participant) => {
+            if (!participant.scores.length) {
+                console.warn(`⚠️ No scores available for participant: ${participant.callName}`);
+                return acc;
+            }
+
+            const emailBody = participant.scores.map(score =>
+                `${participant.trialDate}\t${score.classId}\t${participant.callName}\t${participant.dogBreed}\t${participant.ratterId}\t${participant.firstName}\t${participant.lastName}\t${participant.gmail}\t${score.score}\t${score.time}\t${score.placement || ""}`
+            ).join("\n");
+
+            if (!acc[participant.gmail]) {
+                acc[participant.gmail] = [];
+            }
+            acc[participant.gmail].push(emailBody);
+            return acc;
+        }, {});
+
+        // Send one email per Gmail address
+        for (const [gmail, results] of Object.entries(resultsByGmail)) {
+            const emailBody = results.join("\n\n---\n\n"); // Separate results with a divider
+
+            await transporter.sendMail({
+                from: "yonathanm772@gmail.com",
+                to: gmail,
+                subject: "Happy Ratter Trial Results",
+                text: emailBody,
+            });
+
+            console.log(`✅ Results email sent to: ${gmail}`);
+        }
+
+        res.json({ message: "✅ Results emails sent successfully!" });
+
+    } catch (error) {
+        console.error("❌ Error sending results emails:", error);
+        res.status(500).json({ message: "Internal Server Error", error: error.message });
+    }
+});
+
 // Start the Server
 const PORT = 5500;
 app.listen(PORT, () => {
