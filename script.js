@@ -361,6 +361,11 @@ async function fetchEmailsByDate() {
     }
 }
 
+
+function navigateToParticipants(action) {
+    location.href = `participants.html?action=${action}`;
+}
+
 // Function to display the fetched emails
 function displayEmails(participants) {
     const emailList = document.getElementById("email-list");
@@ -450,29 +455,6 @@ async function sendResultsEmails() {
     }
 }
 
-/*async function fetchEmailsByDate() {
-    const selectedDate = document.getElementById('trial-date').value;
-    const emailContainer = document.getElementById('email-list');
-    
-    try {
-        const response = await fetch(`/api/participants?date=${selectedDate}`);
-        const participants = await response.json();
-        
-        emailContainer.innerHTML = '';
-        participants.forEach(participant => {
-            const emailEntry = document.createElement('div');
-            emailEntry.innerHTML = `
-                <p>${participant.firstName} ${participant.lastName} - ${participant.email}
-                <button onclick="sendConfirmationEmail('${participant._id}')">Send Confirmation</button></p>
-            `;
-            emailContainer.appendChild(emailEntry);
-        });
-    } catch (error) {
-        console.error('❌ Error fetching emails:', error);
-    }
-}*/
-
-
 // Load and display participants
 async function loadParticipants() {
     try {
@@ -552,6 +534,225 @@ async function fetchSelectedParticipant() {
     }
 }
 
+// Function to handle actions based on the query parameter
+async function handleAction() {
+    const params = new URLSearchParams(window.location.search);
+    const action = params.get('action');
+    const participantId = params.get('participantId');
+
+    const actionTitle = document.getElementById('action-title');
+    const actionForm = document.getElementById('action-form');
+
+    if (!actionTitle || !actionForm) {
+        console.error('❌ Missing action-title or action-form elements.');
+        return;
+    }
+
+    if (action === 'lookup') {
+        actionTitle.textContent = 'Look Up Participant(s)';
+        actionForm.innerHTML = `
+            <label for="lookup-input">Enter Ratter ID or Gmail:</label>
+            <input type="text" id="lookup-input" placeholder="Enter Ratter ID or Gmail">
+            <button onclick="performLookup()">Search</button>
+        `;
+    }
+    else if (action === 'modify' && participantId) {
+        actionTitle.textContent = 'Modify Participant';
+
+        try {
+            // Fetch participant details
+            const participant = await fetchData(`/api/participants/${participantId}`);
+
+            if (!participant) {
+                actionForm.innerHTML = '<p>❌ Participant not found.</p>';
+                return;
+            }
+
+            // Display the form with participant details
+            actionForm.innerHTML = `
+                <h3>Modify Participant</h3>
+                <label for="new-first-name">First Name:</label>
+                <input type="text" id="new-first-name" value="${participant.firstName}">
+                <label for="new-last-name">Last Name:</label>
+                <input type="text" id="new-last-name" value="${participant.lastName}">
+                <label for="new-dog-breed">Dog Breed:</label>
+                <input type="text" id="new-dog-breed" value="${participant.dogBreed}">
+                <button id="save-modify-btn">Save Changes</button>
+                <button id="cancel-modify-btn">Cancel</button>
+            `;
+
+            // Handle save and cancel actions
+            document.getElementById('save-modify-btn').addEventListener('click', async () => {
+                const newFirstName = document.getElementById('new-first-name').value.trim();
+                const newLastName = document.getElementById('new-last-name').value.trim();
+                const newDogBreed = document.getElementById('new-dog-breed').value.trim();
+
+                const updatedParticipant = {
+                    ...participant,
+                    firstName: newFirstName || participant.firstName,
+                    lastName: newLastName || participant.lastName,
+                    dogBreed: newDogBreed || participant.dogBreed,
+                };
+
+                try {
+                    const result = await fetchData(`/api/participants/${participantId}`, 'PUT', updatedParticipant);
+                    alert(result.message);
+                    location.href = 'form.html'; // Redirect to home page after saving
+                } catch (error) {
+                    console.error('❌ Error saving participant:', error);
+                    alert('❌ An error occurred while saving the participant.');
+                }
+            });
+
+            document.getElementById('cancel-modify-btn').addEventListener('click', () => {
+                location.href = 'form.html'; // Redirect to home page if canceled
+            });
+        } catch (error) {
+            console.error('❌ Error fetching participant:', error);
+            actionForm.innerHTML = '<p>❌ An error occurred while fetching the participant.</p>';
+        }
+    } else {
+        actionTitle.textContent = 'Invalid Action';
+        actionForm.innerHTML = '<p>❌ No valid action specified.</p>';
+    }
+}
+
+async function performLookup() {
+    const input = document.getElementById('lookup-input').value.trim();
+
+    if (!input) {
+        alert('❌ Please enter a Ratter ID or Gmail.');
+        return;
+    }
+
+    try {
+        const participants = await fetchData('/api/participants');
+        const matchingParticipants = participants.filter(
+            p => p.ratterId === input || p.gmail === input
+        );
+
+        if (matchingParticipants.length === 0) {
+            alert('❌ No participants found.');
+            return;
+        }
+
+        // Display results in a dedicated section instead of an alert
+        const resultsContainer = document.getElementById('lookup-results');
+        resultsContainer.innerHTML = matchingParticipants.map(participant => `
+            <div class="participant-card">
+                <p><strong>Name:</strong> ${participant.firstName} ${participant.lastName}</p>
+                <p><strong>Dog Breed:</strong> ${participant.dogBreed}</p>
+                <p><strong>Ratter ID:</strong> ${participant.ratterId}</p>
+                <p><strong>Gmail:</strong> ${participant.gmail}</p>
+                <button class="modify-btn" style="background-color: green; color: white; margin-top: 10px;" onclick="navigateToModify('${participant._id}')">Modify</button>
+                <button class="delete-btn" style="background-color: red; color: white; margin-top: 5px;" onclick="performDelete('${participant._id}')">Delete</button>
+            </div>
+        `).join('');
+
+        resultsContainer.style.display = 'block'; // Ensure the results section is visible
+    } catch (error) {
+        console.error('❌ Error looking up participants:', error);
+        alert('❌ An error occurred while looking up the participants.');
+    }
+
+    // Clear the input field after the lookup
+    document.getElementById('lookup-input').value = '';
+}
+
+function navigateToModify(participantId) {
+    location.href = `participants.html?action=modify&participantId=${participantId}`;
+}
+
+// Function to perform modify
+async function performModify(participantId) {
+    try {
+        const participant = await fetchData(`/api/participants/${participantId}`);
+
+        if (!participant) {
+            alert('❌ Participant not found.');
+            return;
+        }
+
+        // Create a form dynamically to collect updated details
+        const modifyForm = document.createElement('div');
+        modifyForm.innerHTML = `
+            <h3>Modify Participant</h3>
+            <label for="new-first-name">First Name:</label>
+            <input type="text" id="new-first-name" value="${participant.firstName}">
+            <label for="new-last-name">Last Name:</label>
+            <input type="text" id="new-last-name" value="${participant.lastName}">
+            <label for="new-dog-breed">Dog Breed:</label>
+            <input type="text" id="new-dog-breed" value="${participant.dogBreed}">
+            <button id="save-modify-btn">Save Changes</button>
+            <button id="cancel-modify-btn">Cancel</button>
+        `;
+
+        // Append the form to the body or a container
+        document.body.appendChild(modifyForm);
+
+        // Handle save and cancel actions
+        document.getElementById('save-modify-btn').addEventListener('click', async () => {
+            const newFirstName = document.getElementById('new-first-name').value.trim();
+            const newLastName = document.getElementById('new-last-name').value.trim();
+            const newDogBreed = document.getElementById('new-dog-breed').value.trim();
+
+            const updatedParticipant = {
+                ...participant,
+                firstName: newFirstName || participant.firstName,
+                lastName: newLastName || participant.lastName,
+                dogBreed: newDogBreed || participant.dogBreed,
+            };
+
+            console.log('Updating participant:', updatedParticipant);
+
+            try {
+                const result = await fetchData(`/api/participants/${participantId}`, 'PUT', updatedParticipant);
+                alert(result.message);
+                document.body.removeChild(modifyForm); // Remove the form after saving
+            } catch (error) {
+                console.error('❌ Error saving participant:', error);
+                alert('❌ An error occurred while saving the participant.');
+            }
+        });
+
+        document.getElementById('cancel-modify-btn').addEventListener('click', () => {
+            document.body.removeChild(modifyForm); // Remove the form if canceled
+        });
+    } catch (error) {
+        console.error('❌ Error modifying participant:', error);
+        alert('❌ An error occurred while modifying the participant.');
+    }
+}
+
+// Function to perform delete
+async function performDelete() {
+    const input = document.getElementById('delete-input').value.trim();
+
+    if (!input) {
+        alert('❌ Please enter a Ratter ID or Gmail.');
+        return;
+    }
+
+    try {
+        const participants = await fetchData('/api/participants');
+        const participant = participants.find(p => p.ratterId === input || p.gmail === input);
+
+        if (!participant) {
+            alert('❌ Participant not found.');
+            return;
+        }
+
+        const confirmDelete = confirm(`Are you sure you want to delete participant: ${participant.firstName} ${participant.lastName}?`);
+        if (!confirmDelete) return;
+
+        const result = await fetchData(`/api/participants/${participant._id}`, 'DELETE');
+        alert(result.message);
+    } catch (error) {
+        console.error('❌ Error deleting participant:', error);
+        alert('❌ An error occurred while deleting the participant.');
+    }
+}
+
 async function removeClasses() {
     document.getElementById('classes-selected').addEventListener('click', function(event) {
         if (event.target.classList.contains('remove-class-btn')) {
@@ -582,6 +783,10 @@ window.onload = () => {
     if (document.getElementById('classes-selected')) {
         removeClasses();
     }
+    if (document.getElementById('action-title')) {
+        handleAction()
+    }
+    
 };
 
 /*********** OPTIMIZATION *************
@@ -589,4 +794,6 @@ window.onload = () => {
  * improve labels
  * clear enter scores after
  * if there are no participants for that date, let the user know
+ * 
+ * need delete functionality for participants
  */

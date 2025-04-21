@@ -291,6 +291,27 @@ app.put('/api/participants/:id/scores', async (req, res) => {
     }
 });
 
+app.put('/api/participants/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updatedData = req.body;
+
+        // Validate MongoDB ObjectId format
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ message: '❌ Invalid participant ID format' });
+        }
+
+        const updatedParticipant = await Participant.findByIdAndUpdate(id, updatedData, { new: true });
+        if (!updatedParticipant) {
+            return res.status(404).json({ message: '❌ Participant not found' });
+        }
+
+        res.json({ message: '✅ Participant updated successfully!', participant: updatedParticipant });
+    } catch (error) {
+        console.error('❌ Error updating participant:', error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
 
 /** 
  * Delete a Participant 

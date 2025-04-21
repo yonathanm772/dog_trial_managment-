@@ -1,14 +1,16 @@
 {
   "name": "mongo-trial",
   "version": "1.0.0",
-  "main": "index.js",
+  "description": "Dog Trials App with MongoDB and Electron",
+  "main": "main.js",
   "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.21.2",
@@ -16,5 +18,24 @@
     "nodemailer": "^6.10.0",
     "nodemon": "^3.1.9",
     "path": "^0.12.7"
+  },
+  "devDependencies": {
+    "electron": "^26.1.0",
+    "electron-builder": "^24.6.0"
+  },
+  "build": {
+    "appId": "com.example.dogtrials",
+    "productName": "Ratter Trials Pro",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "**/*",
+      "!node_modules",
+      "!dist"
+    ],
+    "win": {
+      "target": "nsis"
+    }
   }
 }

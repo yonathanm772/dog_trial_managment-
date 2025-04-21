@@ -154,7 +154,7 @@ button:hover {
     padding: 20px;
     text-align: center;
     border-radius: 8px;
-    color: white;
+    color: rgb(0, 0, 0);
     font-weight: bold;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     cursor: pointer;
@@ -177,4 +177,19 @@ button:hover {
 
 .red-card {
     background-color: #dc3545;
+}
+
+#lookup-results {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}
+
+.participant-card {
+    margin-bottom: 10px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #fff;
 }
