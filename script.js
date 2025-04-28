@@ -24,6 +24,14 @@ async function fetchData(endpoint, method = 'GET', data = null) {
     }
 }
 
+function showLoading() {
+    document.getElementById('loading-spinner').style.display = 'block';
+}
+
+function hideLoading() {
+    document.getElementById('loading-spinner').style.display = 'none';
+}
+
 // Load classes from classes.txt
 async function loadClasses() {
     try {
@@ -113,8 +121,57 @@ function renderSelectedClasses() {
     });
 }
 
-// Save Participant
+// Save participant with minimal reloading
 async function saveParticipant() {
+    showLoading();
+
+    try
+    {const trialName = document.getElementById('trial-name').value;
+        const trialDate = document.getElementById('trial-date').value;
+        const callName = document.getElementById('call-name').value;
+        const dogBreed = document.getElementById('dog-breed').value;
+        const ratterId = document.getElementById('ratter-id').value;
+        const firstName = document.getElementById('first-name').value;
+        const lastName = document.getElementById('last-name').value;
+        const gmail = document.getElementById('gmail').value;
+        const data = {
+            trialName,
+            trialDate,
+            callName,
+            dogBreed,
+            ratterId,
+            firstName,
+            lastName,
+            gmail,
+            selectedClasses,
+            scores: [],// Initialize scores as empty
+        };
+    
+        const result = await fetchData('/api/participants', 'POST', data);
+        alert(result.message);
+        
+        document.getElementById('trial-name').value = '';
+        document.getElementById('trial-date').value = '';
+        document.getElementById('call-name').value = '';
+        document.getElementById('dog-breed').value = '';
+        document.getElementById('ratter-id').value = '';
+        document.getElementById('first-name').value = '';
+        document.getElementById('last-name').value = '';
+        document.getElementById('gmail').value = '';
+    
+        selectedClasses = []; // Clear selected classes after saving
+        renderSelectedClasses(); // Refresh the selected classes section
+        loadParticipants(); // Refresh the participants list
+    
+    } catch (error) {
+        console.error('❌ Error saving participant:', error);
+    } finally {
+        hideLoading();  // 🔥 always hide spinner no matter success or error
+    }
+}
+// Save Participant
+/**async function saveParticipant() {
+    showLoading();   // 🔥 show spinner
     const trialName = document.getElementById('trial-name').value;
     const trialDate = document.getElementById('trial-date').value;
     const callName = document.getElementById('call-name').value;
@@ -151,7 +208,7 @@ async function saveParticipant() {
     selectedClasses = []; // Clear selected classes after saving
     renderSelectedClasses(); // Refresh the selected classes section
     loadParticipants(); // Refresh the participants list
-}
+}*/
 
 // Save Score
 async function saveScore() {
@@ -460,8 +517,6 @@ async function loadParticipants() {
     try {
         const participants = await fetchData('/api/participants');
 
-        console.log("🎯 Loaded Participants:", participants); // Debugging output
-
         const participantsList = document.getElementById('participants-list');
         const participantsSelect = document.getElementById('participants-select');
 
@@ -624,7 +679,7 @@ async function performLookup() {
         alert('❌ Please enter a Ratter ID or Gmail.');
         return;
     }
-
+    showLoading();
     try {
         const participants = await fetchData('/api/participants');
         const matchingParticipants = participants.filter(
@@ -639,7 +694,7 @@ async function performLookup() {
         // Display results in a dedicated section instead of an alert
         const resultsContainer = document.getElementById('lookup-results');
         resultsContainer.innerHTML = matchingParticipants.map(participant => `
-            <div class="participant-card">
+            <div class="participant-card" data-id="${participant._id}">
                 <p><strong>Name:</strong> ${participant.firstName} ${participant.lastName}</p>
                 <p><strong>Dog Breed:</strong> ${participant.dogBreed}</p>
                 <p><strong>Ratter ID:</strong> ${participant.ratterId}</p>
@@ -653,6 +708,8 @@ async function performLookup() {
     } catch (error) {
         console.error('❌ Error looking up participants:', error);
         alert('❌ An error occurred while looking up the participants.');
+    } finally {
+        hideLoading();
     }
 
     // Clear the input field after the lookup
@@ -665,6 +722,7 @@ function navigateToModify(participantId) {
 
 // Function to perform modify
 async function performModify(participantId) {
+    showLoading();
     try {
         const participant = await fetchData(`/api/participants/${participantId}`);
 
@@ -721,35 +779,37 @@ async function performModify(participantId) {
     } catch (error) {
         console.error('❌ Error modifying participant:', error);
         alert('❌ An error occurred while modifying the participant.');
+    } finally
+    {
+        hideLoading(); // 🔥 always hide spinner no matter success or error
     }
 }
 
 // Function to perform delete
-async function performDelete() {
-    const input = document.getElementById('delete-input').value.trim();
-
-    if (!input) {
-        alert('❌ Please enter a Ratter ID or Gmail.');
-        return;
-    }
-
+async function performDelete(participantId) {
+    showLoading();
     try {
-        const participants = await fetchData('/api/participants');
-        const participant = participants.find(p => p.ratterId === input || p.gmail === input);
-
-        if (!participant) {
-            alert('❌ Participant not found.');
-            return;
-        }
-
-        const confirmDelete = confirm(`Are you sure you want to delete participant: ${participant.firstName} ${participant.lastName}?`);
+        const confirmDelete = confirm('Are you sure you want to delete this participant?');
         if (!confirmDelete) return;
 
-        const result = await fetchData(`/api/participants/${participant._id}`, 'DELETE');
+        console.log('Deleting participant with ID:', participantId);
+
+        const result = await fetchData(`/api/participants/${participantId}`, 'DELETE');
         alert(result.message);
+
+        // Dynamically remove the participant card from the UI
+        const participantCard = document.querySelector(`.participant-card[data-id="${participantId}"]`);
+        if (participantCard) {
+            participantCard.remove();
+            console.log(`✅ Participant card with ID ${participantId} removed from the UI.`);
+        } else {
+            console.warn(`⚠️ Participant card with ID ${participantId} not found in the DOM.`);
+        }
     } catch (error) {
         console.error('❌ Error deleting participant:', error);
         alert('❌ An error occurred while deleting the participant.');
+    } finally {
+        hideLoading();
     }
 }
 

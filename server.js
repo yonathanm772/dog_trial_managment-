@@ -10,8 +10,8 @@ app.use(cors()); // Enable CORS
 
 // Connect to MongoDB
 mongoose.connect('mongodb://localhost:27017/dog-trials', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
+    //useNewUrlParser: true,
+    //useUnifiedTopology: true,
 });
 
 // Handle MongoDB Connection Events
@@ -393,60 +393,6 @@ app.post("/api/send-confirmation-email", async (req, res) => {
 });
 
 
-/*app.post("/api/send-results-email", async (req, res) => {
-    try {
-        const { date } = req.query;
-        if (!date) {
-            return res.status(400).json({ message: "❌ Date query parameter is required." });
-        }
-
-        // Fetch participants for the given date
-        const participants = await Participant.find({ trialDate: date });
-
-        if (!participants.length) {
-            return res.status(404).json({ message: "❌ No participants found for the given date." });
-        }
-
-        // Setup Gmail transporter (replace with real credentials)
-        const transporter = nodemailer.createTransport({
-            service: "gmail",
-            auth: {
-                user: "yonathanm772@gmail.com",
-                pass: "rrqv ypnp nppy qpdl", // Use an App Password instead of real password
-            },
-        });
-
-        // Send results emails to each participant
-        for (const participant of participants) {
-            if (participant.scores.length === 0) {
-                console.warn(`⚠️ No scores available for participant: ${participant.callName}`);
-                continue;
-            }
-
-            // Format the email body
-            const emailBody = participant.scores.map(score => `
-                ${participant.trialDate}    ${score.classId}    ${participant.callName}     ${participant.dogBreed}     ${participant.ratterId}     ${participant.firstName}    ${participant.lastName}     ${participant.gmail}    ${score.score}  ${score.time}   ${score.placement || ""}
-            `).join("\n");
-
-            // Send the email
-            await transporter.sendMail({
-                from: "yonathanm772@gmail.com",
-                to: participant.gmail,
-                subject: "Happy Ratter Trial Results",
-                text: emailBody,
-            });
-
-            console.log(`✅ Results email sent to: ${participant.gmail}`);
-        }
-
-        res.json({ message: "✅ Results emails sent successfully!" });
-
-    } catch (error) {
-        console.error("❌ Error sending results emails:", error);
-        res.status(500).json({ message: "Internal Server Error", error: error.message });
-    }
-});*/
-
 app.post("/api/send-results-email", async (req, res) => {
     try {
         const { date } = req.query;
@@ -512,6 +458,45 @@ app.post("/api/send-results-email", async (req, res) => {
 
 // Start the Server
 const PORT = 5500;
-app.listen(PORT, () => {
-    console.log(`🚀 Server is running on http://localhost:${PORT}`);
+let server;
+
+try {
+    server = app.listen(PORT, () => {
+        console.log(`🚀 Server is running on http://localhost:${PORT}`);
+    });
+} catch (error) {
+    console.error('❌ Failed to start server:', error);
+    process.exit(1);
+}
+
+// Gracefully handle process termination
+const shutdown = async () => {
+    console.log('🛑 Shutting down server...');
+    if (server) {
+        server.close(() => {
+            console.log('✅ Server closed.');
+        });
+    }
+
+    // Close MongoDB connection
+    try {
+        await mongoose.connection.close();
+        console.log('✅ MongoDB connection closed.');
+    } catch (error) {
+        console.error('❌ Error closing MongoDB connection:', error);
+    }
+
+    // Forcefully exit the process
+    process.exit(0);
+};
+
+// Handle termination signals
+process.on('SIGINT', async () => {
+    console.log('🔄 Received SIGINT (Ctrl+C). Cleaning up...');
+    await shutdown();
+});
+
+process.on('SIGTERM', async () => {
+    console.log('🔄 Received SIGTERM. Cleaning up...');
+    await shutdown();
 });
